@@ -4,6 +4,7 @@ import HeroSection from '@/components/HeroSection';
 import FeaturesSection from '@/components/FeaturesSection';
 import ModelsSection from '@/components/ModelsSection';
 import GallerySection from '@/components/GallerySection';
+import BlogSection from '@/components/BlogSection';
 import ImageCreator from '@/components/ImageCreator';
 import Footer from '@/components/Footer';
 
@@ -16,6 +17,7 @@ const Index = () => {
         <FeaturesSection />
         <ModelsSection />
         <GallerySection />
+        <BlogSection />
         <ImageCreator />
       </main>
       <Footer />

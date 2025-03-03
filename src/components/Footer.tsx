@@ -27,6 +27,9 @@ const Footer = () => {
             <a href="#gallery" className="text-white/70 hover:text-futuristic-yellow transition-colors">
               Gallery
             </a>
+            <a href="#blog" className="text-white/70 hover:text-futuristic-yellow transition-colors">
+              Blog
+            </a>
             <a href="#create" className="text-white/70 hover:text-futuristic-yellow transition-colors">
               Create
             </a>

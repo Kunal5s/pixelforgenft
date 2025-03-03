@@ -46,6 +46,9 @@ const Header = () => {
           <a href="#gallery" className="text-white/80 hover:text-futuristic-yellow transition-colors">
             Gallery
           </a>
+          <a href="#blog" className="text-white/80 hover:text-futuristic-yellow transition-colors">
+            Blog
+          </a>
           <a href="#create" className="button-primary">
             Create Now
           </a>
@@ -85,6 +88,13 @@ const Header = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Gallery
+            </a>
+            <a 
+              href="#blog" 
+              className="text-white/80 hover:text-futuristic-yellow transition-colors py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Blog
             </a>
             <a 
               href="#create" 
