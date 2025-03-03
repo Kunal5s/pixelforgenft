@@ -1,6 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heading2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const blogPosts = [
   {
@@ -9,7 +10,8 @@ const blogPosts = [
     excerpt: "Learn how to craft the perfect prompts to get exactly the images you want from AI models.",
     category: "Tutorial",
     date: "April 12, 2023",
-    imageClass: "bg-gradient-to-br from-futuristic-darkgray to-futuristic-black"
+    imageClass: "bg-gradient-to-br from-futuristic-darkgray to-futuristic-black",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, urna eu tincidunt consectetur, nisl nunc euismod nisl, eu tincidunt nisl nisl sit amet nisl."
   },
   {
     id: 2,
@@ -17,7 +19,8 @@ const blogPosts = [
     excerpt: "Explore the rapid advancements in AI image generation technology over the past few years.",
     category: "Research",
     date: "March 28, 2023",
-    imageClass: "bg-gradient-to-br from-futuristic-darkgray/80 to-futuristic-black"
+    imageClass: "bg-gradient-to-br from-futuristic-darkgray/80 to-futuristic-black",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, urna eu tincidunt consectetur, nisl nunc euismod nisl, eu tincidunt nisl nisl sit amet nisl."
   },
   {
     id: 3,
@@ -25,7 +28,8 @@ const blogPosts = [
     excerpt: "Discover how professional artists are incorporating AI tools into their creative processes.",
     category: "Inspiration",
     date: "March 15, 2023",
-    imageClass: "bg-gradient-to-br from-futuristic-darkgray/60 to-futuristic-black"
+    imageClass: "bg-gradient-to-br from-futuristic-darkgray/60 to-futuristic-black",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, urna eu tincidunt consectetur, nisl nunc euismod nisl, eu tincidunt nisl nisl sit amet nisl."
   },
   {
     id: 4,
@@ -33,7 +37,8 @@ const blogPosts = [
     excerpt: "A deep dive into the ethical implications and considerations when using AI to create artwork.",
     category: "Opinion",
     date: "February 22, 2023",
-    imageClass: "bg-gradient-to-br from-futuristic-darkgray/40 to-futuristic-black"
+    imageClass: "bg-gradient-to-br from-futuristic-darkgray/40 to-futuristic-black",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, urna eu tincidunt consectetur, nisl nunc euismod nisl, eu tincidunt nisl nisl sit amet nisl."
   },
   {
     id: 5,
@@ -41,7 +46,8 @@ const blogPosts = [
     excerpt: "Advanced techniques for customizing AI image generators to match your unique artistic vision.",
     category: "Advanced",
     date: "February 10, 2023",
-    imageClass: "bg-gradient-to-br from-futuristic-darkgray/20 to-futuristic-black"
+    imageClass: "bg-gradient-to-br from-futuristic-darkgray/20 to-futuristic-black",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, urna eu tincidunt consectetur, nisl nunc euismod nisl, eu tincidunt nisl nisl sit amet nisl."
   },
   {
     id: 6,
@@ -49,12 +55,63 @@ const blogPosts = [
     excerpt: "An insider look at the development process of our flagship AI image generation model.",
     category: "Technology",
     date: "January 30, 2023",
-    imageClass: "bg-gradient-to-br from-futuristic-darkgray/10 to-futuristic-black"
+    imageClass: "bg-gradient-to-br from-futuristic-darkgray/10 to-futuristic-black",
+    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, urna eu tincidunt consectetur, nisl nunc euismod nisl, eu tincidunt nisl nisl sit amet nisl."
   }
 ];
 
 const BlogSection = () => {
   const [visiblePosts, setVisiblePosts] = useState(3);
+  const [isLoading, setIsLoading] = useState(false);
+  const [googleDocsContent, setGoogleDocsContent] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    const fetchGoogleDocs = async () => {
+      setIsLoading(true);
+      
+      try {
+        const apiKey = "AIzaSyDZ5NChmmr6XFiHFr7p5HZIPiLsd9UqYLc";
+        const docId = "1YBwJFjdP8zy0VyEh09trPRAqCFIDJVeKQxM3sC51Sak";
+        const url = `https://docs.googleapis.com/v1/documents/${docId}?key=${apiKey}`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Google Docs API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Extract text content from the document
+        let content = "";
+        if (data.body && data.body.content) {
+          content = data.body.content
+            .map((e: any) => 
+              e.paragraph?.elements?.map((el: any) => el.textRun?.content).join('') || ''
+            )
+            .join('<br>');
+        }
+        
+        setGoogleDocsContent(content);
+      } catch (error) {
+        console.error("Error fetching Google Docs:", error);
+        toast({
+          title: "Error fetching blog content",
+          description: "Could not load content from Google Docs. Displaying local content instead.",
+          variant: "destructive",
+        });
+        
+        // Set googleDocsContent to null on error so we fall back to local content
+        setGoogleDocsContent(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Uncomment the line below to enable Google Docs fetching when authentication is properly set up
+    // fetchGoogleDocs();
+  }, [toast]);
   
   const handleLoadMore = () => {
     setVisiblePosts(prev => Math.min(prev + 3, blogPosts.length));
@@ -80,33 +137,53 @@ const BlogSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-          {blogPosts.slice(0, visiblePosts).map(post => (
-            <div key={post.id} className="glass-panel p-4 rounded-lg transform transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(255,209,0,0.1)]">
-              <div className={`aspect-video ${post.imageClass} rounded-md mb-4`}></div>
-              <div className="inline-block px-3 py-1 bg-futuristic-yellow/10 rounded-full text-futuristic-yellow text-xs font-medium mb-3">
-                {post.category}
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
-              <p className="text-white/60 text-sm mb-4">{post.excerpt}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-white/40 text-xs">{post.date}</span>
-                <a href="#" className="text-futuristic-yellow text-sm font-medium hover:underline">Read More</a>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {visiblePosts < blogPosts.length && (
-          <div className="flex justify-center mt-12">
-            <button 
-              onClick={handleLoadMore}
-              className="button-secondary"
-            >
-              Load More Articles
-            </button>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-futuristic-yellow"></div>
           </div>
+        ) : (
+          <>
+            {googleDocsContent ? (
+              <div id="blog-content" className="glass-panel p-6 rounded-lg mb-12" 
+                dangerouslySetInnerHTML={{ __html: googleDocsContent }} />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+                {blogPosts.slice(0, visiblePosts).map(post => (
+                  <div key={post.id} className="glass-panel p-4 rounded-lg transform transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(255,209,0,0.1)]">
+                    <div className={`aspect-video ${post.imageClass} rounded-md mb-4`}></div>
+                    <div className="inline-block px-3 py-1 bg-futuristic-yellow/10 rounded-full text-futuristic-yellow text-xs font-medium mb-3">
+                      {post.category}
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
+                    <p className="text-white/60 text-sm mb-4">{post.excerpt}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/40 text-xs">{post.date}</span>
+                      <a href="#" className="text-futuristic-yellow text-sm font-medium hover:underline">Read More</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!googleDocsContent && visiblePosts < blogPosts.length && (
+              <div className="flex justify-center mt-12">
+                <button 
+                  onClick={handleLoadMore}
+                  className="button-secondary"
+                >
+                  Load More Articles
+                </button>
+              </div>
+            )}
+          </>
         )}
+
+        <div className="mt-12 text-center">
+          <p className="text-white/50 text-sm">
+            Note: Google Docs integration is currently disabled due to authentication requirements.
+            You'll need to set up OAuth2 authentication to enable this feature.
+          </p>
+        </div>
       </div>
     </section>
   );
