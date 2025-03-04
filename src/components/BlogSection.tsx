@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Heading2 } from "lucide-react";
+import BloggerFeed from "./BloggerFeed";
 
 const blogPosts = [
   {
@@ -188,6 +189,7 @@ const blogPosts = [
 const BlogSection = () => {
   const [visiblePosts, setVisiblePosts] = useState(3);
   const [selectedPost, setSelectedPost] = useState<number | null>(null);
+  const [showExternalContent, setShowExternalContent] = useState(false);
   
   const handleLoadMore = () => {
     setVisiblePosts(prev => Math.min(prev + 3, blogPosts.length));
@@ -195,11 +197,23 @@ const BlogSection = () => {
 
   const handlePostClick = (postId: number) => {
     setSelectedPost(postId);
+    setShowExternalContent(false);
     // Scroll to top of post when selected
     window.scrollTo({ top: document.getElementById('blog')?.offsetTop || 0, behavior: 'smooth' });
   };
 
   const handleBackToList = () => {
+    setSelectedPost(null);
+    setShowExternalContent(false);
+  };
+
+  const handleViewExternalPost = (url: string) => {
+    // For premium content, redirect to the external URL
+    window.open(url, '_blank');
+  };
+
+  const toggleFeedView = () => {
+    setShowExternalContent(prev => !prev);
     setSelectedPost(null);
   };
 
@@ -221,9 +235,28 @@ const BlogSection = () => {
             Discover the latest trends, techniques, and inspiration for AI image generation.
             Stay updated with our cutting-edge research and creative explorations.
           </p>
+          
+          <div className="flex space-x-4 mb-8">
+            <button 
+              onClick={() => setShowExternalContent(false)}
+              className={`px-4 py-2 rounded-md transition-all ${!showExternalContent ? 'bg-futuristic-yellow text-black' : 'bg-glass-dark text-white'}`}
+            >
+              Featured Articles
+            </button>
+            <button 
+              onClick={() => setShowExternalContent(true)}
+              className={`px-4 py-2 rounded-md transition-all ${showExternalContent ? 'bg-futuristic-yellow text-black' : 'bg-glass-dark text-white'}`}
+            >
+              Premium Content
+            </button>
+          </div>
         </div>
 
-        {selectedPost ? (
+        {showExternalContent ? (
+          <div id="blog-posts">
+            <BloggerFeed onViewFullPost={handleViewExternalPost} />
+          </div>
+        ) : selectedPost ? (
           <div className="blog-container">
             {/* Full article view */}
             <button 
@@ -276,7 +309,7 @@ const BlogSection = () => {
           </div>
         )}
 
-        {!selectedPost && visiblePosts < blogPosts.length && (
+        {!selectedPost && !showExternalContent && visiblePosts < blogPosts.length && (
           <div className="flex justify-center mt-12">
             <button 
               onClick={handleLoadMore}
