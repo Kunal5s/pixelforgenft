@@ -87,13 +87,17 @@ const BlogSection = () => {
   const [visiblePosts, setVisiblePosts] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const [googleDocsContent, setGoogleDocsContent] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
     const fetchGoogleDocs = async () => {
       setIsLoading(true);
+      setFetchError(null);
       
       try {
+        // Note: Google Docs API requires OAuth2 authentication,
+        // a simple API key won't work for accessing private docs
         const apiKey = "AIzaSyDZ5NChmmr6XFiHFr7p5HZIPiLsd9UqYLc";
         const docIds = ["1YBwJFjdP8zy0VyEh09trPRAqCFIDJVeKQxM3sC51Sak"];
         let contentHTML = "";
@@ -104,7 +108,15 @@ const BlogSection = () => {
           const response = await fetch(url);
           
           if (!response.ok) {
-            throw new Error(`Google Docs API error: ${response.status}`);
+            // Get more detailed error information
+            const errorData = await response.json();
+            console.log("API Error Details:", errorData);
+            
+            if (response.status === 401) {
+              throw new Error("Authentication error: Google Docs API requires OAuth2 authentication, not just an API key");
+            } else {
+              throw new Error(`Google Docs API error: ${response.status}`);
+            }
           }
           
           const data = await response.json();
@@ -147,6 +159,9 @@ const BlogSection = () => {
         setGoogleDocsContent(contentHTML);
       } catch (error) {
         console.error("Error fetching Google Docs:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        setFetchError(errorMessage);
+        
         toast({
           title: "Error fetching blog content",
           description: "Could not load content from Google Docs. Displaying local content instead.",
@@ -194,6 +209,14 @@ const BlogSection = () => {
           </div>
         ) : (
           <>
+            {fetchError && (
+              <div className="glass-panel p-4 rounded-lg mb-6 border border-red-500/30 bg-red-500/10">
+                <h3 className="text-lg font-semibold text-red-400 mb-2">Cannot Load Google Docs Content</h3>
+                <p className="text-white/70">{fetchError}</p>
+                <p className="text-white/70 mt-2">Showing local blog content instead.</p>
+              </div>
+            )}
+          
             {googleDocsContent ? (
               <div className="blog-container">
                 <div id="blog-content" className="mt-8" dangerouslySetInnerHTML={{ __html: googleDocsContent }} />
