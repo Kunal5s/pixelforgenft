@@ -72,28 +72,54 @@ const BlogSection = () => {
       
       try {
         const apiKey = "AIzaSyDZ5NChmmr6XFiHFr7p5HZIPiLsd9UqYLc";
-        const docId = "1YBwJFjdP8zy0VyEh09trPRAqCFIDJVeKQxM3sC51Sak";
-        const url = `https://docs.googleapis.com/v1/documents/${docId}?key=${apiKey}`;
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Google Docs API error: ${response.status}`);
+        const docIds = ["1YBwJFjdP8zy0VyEh09trPRAqCFIDJVeKQxM3sC51Sak"];
+        let contentHTML = "";
+
+        for (const docId of docIds) {
+          const url = `https://docs.googleapis.com/v1/documents/${docId}?key=${apiKey}`;
+
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            throw new Error(`Google Docs API error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log("Fetched Google Doc:", data);
+          
+          let textContent = "";
+          let imagesHTML = "";
+          
+          if (data.body && data.body.content) {
+            for (const element of data.body.content) {
+              if (element.paragraph?.elements) {
+                let text = element.paragraph.elements
+                  .map((e: any) => e.textRun?.content || "")
+                  .join("");
+                textContent += `<p>${text}</p>`;
+              }
+            }
+          }
+
+          if (data.inlineObjects) {
+            for (const [key, value] of Object.entries(data.inlineObjects)) {
+              const imageUrl = value.inlineObjectProperties?.embeddedObject?.imageProperties?.contentUri;
+              if (imageUrl) {
+                imagesHTML += `<img src="${imageUrl}" alt="Blog Image" class="rounded-lg my-4 max-w-full">`;
+              }
+            }
+          }
+
+          let title = data.title || "Untitled Blog Post";
+
+          contentHTML += `<div class="blog-post glass-panel p-6 rounded-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4">${title}</h2>
+            ${textContent}
+            ${imagesHTML}
+          </div>`;
         }
-        
-        const data = await response.json();
-        
-        // Extract text content from the document
-        let content = "";
-        if (data.body && data.body.content) {
-          content = data.body.content
-            .map((e: any) => 
-              e.paragraph?.elements?.map((el: any) => el.textRun?.content).join('') || ''
-            )
-            .join('<br>');
-        }
-        
-        setGoogleDocsContent(content);
+
+        setGoogleDocsContent(contentHTML);
       } catch (error) {
         console.error("Error fetching Google Docs:", error);
         toast({
@@ -109,8 +135,8 @@ const BlogSection = () => {
       }
     };
     
-    // Uncomment the line below to enable Google Docs fetching when authentication is properly set up
-    // fetchGoogleDocs();
+    // We're directly calling the function now to fetch Google Docs content
+    fetchGoogleDocs();
   }, [toast]);
   
   const handleLoadMore = () => {
@@ -144,8 +170,9 @@ const BlogSection = () => {
         ) : (
           <>
             {googleDocsContent ? (
-              <div id="blog-content" className="glass-panel p-6 rounded-lg mb-12" 
-                dangerouslySetInnerHTML={{ __html: googleDocsContent }} />
+              <div className="blog-container">
+                <div id="blog-content" className="mt-8" dangerouslySetInnerHTML={{ __html: googleDocsContent }} />
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
                 {blogPosts.slice(0, visiblePosts).map(post => (
@@ -177,13 +204,6 @@ const BlogSection = () => {
             )}
           </>
         )}
-
-        <div className="mt-12 text-center">
-          <p className="text-white/50 text-sm">
-            Note: Google Docs integration is currently disabled due to authentication requirements.
-            You'll need to set up OAuth2 authentication to enable this feature.
-          </p>
-        </div>
       </div>
     </section>
   );
