@@ -3,6 +3,29 @@ import { useState, useEffect } from "react";
 import { Heading2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Define TypeScript interfaces for Google Docs API response
+interface GoogleDocsInlineObject {
+  inlineObjectProperties?: {
+    embeddedObject?: {
+      imageProperties?: {
+        contentUri?: string;
+      };
+    };
+  };
+}
+
+interface GoogleDocsParagraphElement {
+  textRun?: {
+    content: string;
+  };
+}
+
+interface GoogleDocsParagraph {
+  paragraph?: {
+    elements?: GoogleDocsParagraphElement[];
+  };
+}
+
 const blogPosts = [
   {
     id: 1,
@@ -92,9 +115,9 @@ const BlogSection = () => {
           
           if (data.body && data.body.content) {
             for (const element of data.body.content) {
-              if (element.paragraph?.elements) {
-                let text = element.paragraph.elements
-                  .map((e: any) => e.textRun?.content || "")
+              if ((element as GoogleDocsParagraph).paragraph?.elements) {
+                let text = (element as GoogleDocsParagraph).paragraph!.elements!
+                  .map((e) => e.textRun?.content || "")
                   .join("");
                 textContent += `<p>${text}</p>`;
               }
@@ -103,7 +126,9 @@ const BlogSection = () => {
 
           if (data.inlineObjects) {
             for (const [key, value] of Object.entries(data.inlineObjects)) {
-              const imageUrl = value.inlineObjectProperties?.embeddedObject?.imageProperties?.contentUri;
+              // Add type assertion to value
+              const typedValue = value as GoogleDocsInlineObject;
+              const imageUrl = typedValue.inlineObjectProperties?.embeddedObject?.imageProperties?.contentUri;
               if (imageUrl) {
                 imagesHTML += `<img src="${imageUrl}" alt="Blog Image" class="rounded-lg my-4 max-w-full">`;
               }
