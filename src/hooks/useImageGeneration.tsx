@@ -12,8 +12,8 @@ interface GenerationOptions {
   steps: number;
 }
 
-// Using a free API key from Hugging Face - suitable for demo purposes
-const API_KEY = "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";
+// Updated API key for Hugging Face
+const API_KEY = "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";
 
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
