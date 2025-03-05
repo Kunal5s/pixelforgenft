@@ -5,32 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const aspectRatios = [
-  { value: "1:1", label: "Square (1:1)" },
-  { value: "4:3", label: "Standard (4:3)" },
-  { value: "16:9", label: "Widescreen (16:9)" },
-  { value: "9:16", label: "Portrait (9:16)" },
-  { value: "21:9", label: "Ultrawide (21:9)" },
-];
-
-const stylePresets = [
-  { value: "photorealistic", label: "Photorealistic" },
-  { value: "cinematic", label: "Cinematic" },
-  { value: "anime", label: "Anime" },
-  { value: "digital-art", label: "Digital Art" },
-  { value: "oil-painting", label: "Oil Painting" },
-  { value: "watercolor", label: "Watercolor" },
-  { value: "pencil-sketch", label: "Pencil Sketch" },
-  { value: "3d-render", label: "3D Render" },
-];
-
-const models = [
-  { value: "flux", label: "FLUX.1-schnell MAX", description: "Fastest generation (4 sec)" },
-  { value: "realvis", label: "RealVisXL UHD", description: "Highest realism" },
-  { value: "imagen", label: "Google Imagen 3", description: "Best composition" },
-  { value: "dalle", label: "DALLE 3", description: "Most creative" },
-];
+import { modelsList, stylePresets, aspectRatios } from '@/data/imageGeneratorData';
 
 const ImageCreator = () => {
   const [prompt, setPrompt] = useState("");
@@ -39,6 +14,9 @@ const ImageCreator = () => {
   const [style, setStyle] = useState("cinematic");
   const [quality, setQuality] = useState([80]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [guidanceScale, setGuidanceScale] = useState([9]);
+  const [steps, setSteps] = useState([45]);
+  const [batchSize, setBatchSize] = useState(1);
 
   const handleGenerate = () => {
     if (!prompt.trim()) return;
@@ -50,6 +28,11 @@ const ImageCreator = () => {
     }, 3000);
   };
 
+  // Filter aspect ratios based on selected model
+  const selectedModelData = modelsList.find(model => model.value === selectedModel);
+  const availableRatios = selectedModelData?.supportedRatios || aspectRatios.map(r => r.value);
+  const filteredAspectRatios = aspectRatios.filter(ratio => availableRatios.includes(ratio.value));
+
   return (
     <section id="create" className="section-padding bg-futuristic-black relative">
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-futuristic-darkgray to-transparent"></div>
@@ -57,13 +40,13 @@ const ImageCreator = () => {
       <div className="container-custom relative z-10">
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-1 rounded-full bg-futuristic-yellow/10 border border-futuristic-yellow/30 mb-4">
-            <span className="text-sm font-medium text-futuristic-yellow">Image Creation</span>
+            <span className="text-sm font-medium text-futuristic-yellow">AI Image Generator</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Bring Your <span className="text-futuristic-yellow">Vision</span> to Life
+            Create Stunning, <span className="text-futuristic-yellow">High-Quality</span> Artwork
           </h2>
           <p className="text-lg text-white/70 max-w-2xl mx-auto">
-            Create stunning AI-generated images with our intuitive creation tool. Just describe what you want to see, customize your settings, and watch as AI brings your ideas to reality.
+            Our Advanced AI Image Generator allows you to create professional, ultra-detailed images with multiple aspect ratios, artistic styles, and AI models. Customize your generation settings for the best results!
           </p>
         </div>
 
@@ -92,7 +75,7 @@ const ImageCreator = () => {
                       <SelectValue placeholder="Select aspect ratio" />
                     </SelectTrigger>
                     <SelectContent className="bg-futuristic-darkgray border-futuristic-gray text-white">
-                      {aspectRatios.map((ratio) => (
+                      {filteredAspectRatios.map((ratio) => (
                         <SelectItem key={ratio.value} value={ratio.value}>
                           {ratio.label}
                         </SelectItem>
@@ -107,7 +90,7 @@ const ImageCreator = () => {
                     <SelectTrigger className="bg-futuristic-darkgray border-futuristic-gray text-white">
                       <SelectValue placeholder="Select style" />
                     </SelectTrigger>
-                    <SelectContent className="bg-futuristic-darkgray border-futuristic-gray text-white">
+                    <SelectContent className="bg-futuristic-darkgray border-futuristic-gray text-white max-h-[300px]">
                       {stylePresets.map((stylePreset) => (
                         <SelectItem key={stylePreset.value} value={stylePreset.value}>
                           {stylePreset.label}
@@ -129,9 +112,58 @@ const ImageCreator = () => {
                 />
               </div>
               
+              <div className="mb-6">
+                <label className="text-sm text-white/80 mb-2 block">Guidance Scale: {guidanceScale}</label>
+                <Slider
+                  value={guidanceScale}
+                  onValueChange={setGuidanceScale}
+                  max={15}
+                  min={1}
+                  step={0.1}
+                  className="py-4"
+                />
+                <p className="text-xs text-white/60 mt-2">
+                  Higher values make images follow your prompt more closely.
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="text-sm text-white/80 mb-2 block">Steps: {steps}</label>
+                <Slider
+                  value={steps}
+                  onValueChange={setSteps}
+                  max={100}
+                  min={10}
+                  step={1}
+                  className="py-4"
+                />
+                <p className="text-xs text-white/60 mt-2">
+                  More steps result in higher-quality and more detailed images.
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="text-sm text-white/80 mb-2 block">Batch Size</label>
+                <Select value={batchSize.toString()} onValueChange={(value) => setBatchSize(Number(value))}>
+                  <SelectTrigger className="bg-futuristic-darkgray border-futuristic-gray text-white">
+                    <SelectValue placeholder="Select batch size" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-futuristic-darkgray border-futuristic-gray text-white">
+                    {[1, 2, 4, 6, 8, 10].map((size) => (
+                      <SelectItem key={size} value={size.toString()}>
+                        {size} {size > 1 ? "images" : "image"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-white/60 mt-2">
+                  Generate multiple unique images in one go.
+                </p>
+              </div>
+              
               <h3 className="text-xl font-semibold mb-4">Select AI Model</h3>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {models.map((model) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 max-h-[300px] overflow-y-auto pr-2">
+                {modelsList.map((model) => (
                   <button
                     key={model.value}
                     className={`p-3 rounded-lg text-left transition-all ${
@@ -139,7 +171,13 @@ const ImageCreator = () => {
                         ? 'bg-futuristic-yellow/20 border border-futuristic-yellow/50'
                         : 'bg-futuristic-darkgray border border-futuristic-gray hover:border-futuristic-yellow/30'
                     }`}
-                    onClick={() => setSelectedModel(model.value)}
+                    onClick={() => {
+                      setSelectedModel(model.value);
+                      // If current aspect ratio is not supported by the new model, reset to the first supported ratio
+                      if (!model.supportedRatios.includes(aspectRatio)) {
+                        setAspectRatio(model.supportedRatios[0]);
+                      }
+                    }}
                   >
                     <div className="font-medium">{model.label}</div>
                     <div className="text-xs text-white/60">{model.description}</div>
@@ -182,7 +220,7 @@ const ImageCreator = () => {
                       <Sparkles size={48} className="text-futuristic-yellow/50 mb-4" />
                       <p className="text-white/70 text-center">Your image will appear here</p>
                       <p className="text-xs text-white/50 mt-2 text-center max-w-xs">
-                        Using {models.find(m => m.value === selectedModel)?.label} with {stylePresets.find(s => s.value === style)?.label} style
+                        Using {modelsList.find(m => m.value === selectedModel)?.label} with {stylePresets.find(s => s.value === style)?.label} style
                       </p>
                     </div>
                   ) : (
