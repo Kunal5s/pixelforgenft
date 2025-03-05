@@ -114,7 +114,7 @@ export const useImageGeneration = () => {
       toast({
         title: "Images created successfully",
         description: `Created ${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''}`,
-        variant: "success",
+        variant: "default", // Changed from "success" to "default"
       });
       
       return imageUrls;
