@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
-import { Sparkles, Zap, Palette, Infinity } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sparkles, Zap, Palette, Download, RefreshCw } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Toast } from "@/components/ui/toast";
 import { modelsList, stylePresets, aspectRatios } from '@/data/imageGeneratorData';
+import { useImageGeneration } from '@/hooks/useImageGeneration';
 
 const ImageCreator = () => {
   const [prompt, setPrompt] = useState("");
@@ -13,19 +15,53 @@ const ImageCreator = () => {
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [style, setStyle] = useState("cinematic");
   const [quality, setQuality] = useState([80]);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [guidanceScale, setGuidanceScale] = useState([9]);
   const [steps, setSteps] = useState([45]);
   const [batchSize, setBatchSize] = useState(1);
+  const [generatedImagesUrls, setGeneratedImagesUrls] = useState<string[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const handleGenerate = () => {
+  const { 
+    generateImage, 
+    isGenerating, 
+    generatedImages, 
+    error 
+  } = useImageGeneration();
+
+  useEffect(() => {
+    if (generatedImages.length > 0) {
+      setGeneratedImagesUrls(generatedImages);
+    }
+  }, [generatedImages]);
+
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
     
-    setIsGenerating(true);
-    // In a real implementation, we would call an API here
-    setTimeout(() => {
-      setIsGenerating(false);
-    }, 3000);
+    const result = await generateImage({
+      prompt: prompt,
+      model: selectedModel,
+      aspectRatio: aspectRatio,
+      stylePreset: style,
+      quality: quality[0],
+      guidanceScale: guidanceScale[0],
+      steps: steps[0],
+    }, batchSize);
+    
+    if (result) {
+      setGeneratedImagesUrls(result);
+      setSelectedImageIndex(0);
+    }
+  };
+
+  const handleDownload = (index = selectedImageIndex) => {
+    if (generatedImagesUrls.length <= index) return;
+    
+    const link = document.createElement('a');
+    link.href = generatedImagesUrls[index];
+    link.download = `ai-generated-image-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Filter aspect ratios based on selected model
@@ -209,43 +245,74 @@ const ImageCreator = () => {
             <div className="md:w-1/2">
               <h3 className="text-xl font-semibold mb-4">Preview</h3>
               <div className="bg-futuristic-darkgray rounded-lg border border-futuristic-gray h-[450px] overflow-hidden relative">
-                <div className="absolute inset-0 flex items-center justify-center flex-col p-6">
-                  {isGenerating ? (
-                    <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 border-4 border-futuristic-yellow/20 border-t-futuristic-yellow rounded-full animate-spin mb-4"></div>
-                      <p className="text-white/70">Generating your masterpiece...</p>
+                {generatedImagesUrls.length > 0 && selectedImageIndex < generatedImagesUrls.length ? (
+                  <div className="relative h-full">
+                    <img 
+                      src={generatedImagesUrls[selectedImageIndex]} 
+                      alt={`AI generated ${prompt}`}
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute bottom-4 right-4 flex gap-2">
+                      <button 
+                        onClick={() => handleDownload()} 
+                        className="p-2 bg-futuristic-black/70 hover:bg-futuristic-yellow/80 rounded-full transition-colors"
+                        title="Download image"
+                      >
+                        <Download size={20} className="text-white" />
+                      </button>
                     </div>
-                  ) : prompt ? (
-                    <div className="flex flex-col items-center">
-                      <Sparkles size={48} className="text-futuristic-yellow/50 mb-4" />
-                      <p className="text-white/70 text-center">Your image will appear here</p>
-                      <p className="text-xs text-white/50 mt-2 text-center max-w-xs">
-                        Using {modelsList.find(m => m.value === selectedModel)?.label} with {stylePresets.find(s => s.value === style)?.label} style
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center text-center">
-                      <Zap size={48} className="text-futuristic-yellow/50 mb-4" />
-                      <p className="text-white/70">Enter a prompt to create your image</p>
-                      <p className="text-xs text-white/50 mt-2 max-w-xs">
-                        Be descriptive for best results - include details about subject, style, lighting, and composition
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center flex-col p-6">
+                    {isGenerating ? (
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 border-4 border-futuristic-yellow/20 border-t-futuristic-yellow rounded-full animate-spin mb-4"></div>
+                        <p className="text-white/70">Generating your masterpiece...</p>
+                      </div>
+                    ) : prompt ? (
+                      <div className="flex flex-col items-center">
+                        <Sparkles size={48} className="text-futuristic-yellow/50 mb-4" />
+                        <p className="text-white/70 text-center">Your image will appear here</p>
+                        <p className="text-xs text-white/50 mt-2 text-center max-w-xs">
+                          Using {modelsList.find(m => m.value === selectedModel)?.label} with {stylePresets.find(s => s.value === style)?.label} style
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center text-center">
+                        <Zap size={48} className="text-futuristic-yellow/50 mb-4" />
+                        <p className="text-white/70">Enter a prompt to create your image</p>
+                        <p className="text-xs text-white/50 mt-2 max-w-xs">
+                          Be descriptive for best results - include details about subject, style, lighting, and composition
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div className="bg-futuristic-darkgray rounded-lg border border-futuristic-gray aspect-square flex items-center justify-center">
-                  <Sparkles size={24} className="text-white/30" />
+              {generatedImagesUrls.length > 0 && (
+                <div className="mt-4 grid grid-cols-4 gap-3">
+                  {generatedImagesUrls.map((url, index) => (
+                    <div 
+                      key={index}
+                      className={`bg-futuristic-darkgray rounded-lg border overflow-hidden aspect-square cursor-pointer
+                        ${index === selectedImageIndex ? 'border-futuristic-yellow' : 'border-futuristic-gray'}`}
+                      onClick={() => setSelectedImageIndex(index)}
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Generated image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                  {Array(4 - (generatedImagesUrls.length % 4 || 4)).fill(0).map((_, index) => (
+                    <div key={`empty-${index}`} className="bg-futuristic-darkgray rounded-lg border border-futuristic-gray aspect-square flex items-center justify-center">
+                      <Sparkles size={24} className="text-white/30" />
+                    </div>
+                  ))}
                 </div>
-                <div className="bg-futuristic-darkgray rounded-lg border border-futuristic-gray aspect-square flex items-center justify-center">
-                  <Sparkles size={24} className="text-white/30" />
-                </div>
-                <div className="bg-futuristic-darkgray rounded-lg border border-futuristic-gray aspect-square flex items-center justify-center">
-                  <Sparkles size={24} className="text-white/30" />
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
