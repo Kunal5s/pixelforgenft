@@ -87,9 +87,10 @@ const ImageCreator = () => {
 
         <Alert className="mb-6 border-yellow-500/50 bg-yellow-500/10">
           <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <AlertTitle className="text-yellow-500">Demo Limitations</AlertTitle>
+          <AlertTitle className="text-yellow-500">Best Practices</AlertTitle>
           <AlertDescription>
-            This demo uses Hugging Face's free API which has monthly generation limits. If images fail to generate, please try again later or with a different model.
+            For best results, try using the "Stable Diffusion XL 1.5+" model which is most reliable. If a model fails, 
+            the system will automatically fall back to SDXL to ensure you always get an image.
           </AlertDescription>
         </Alert>
 

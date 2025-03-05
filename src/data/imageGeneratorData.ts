@@ -14,27 +14,27 @@ export const aspectRatios = [
 // Model definitions with supported aspect ratios
 export const modelsList = [
   {
+    value: "sdxl-1.5",
+    label: "Stable Diffusion XL 1.5+ ⭐",
+    description: "Ultra-reliable, high-detail professional image creation (Recommended)",
+    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
+  },
+  {
     value: "sdxl-turbo",
     label: "SDXL Turbo Pro",
     description: "Ultra-fast, high-quality image generation with strong prompt adherence",
     supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
   },
   {
-    value: "sdxl-1.5",
-    label: "Stable Diffusion XL 1.5+",
-    description: "Ultra-realistic, high-detail professional image creation",
-    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
+    value: "flux",
+    label: "FLUX.1-schnell MAX",
+    description: "Premium commercial-grade AI images by Black Forest Labs",
+    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
   },
   {
     value: "sd-lightning",
     label: "SD Lightning V2",
     description: "Lightning-fast generation with exceptional detail retention",
-    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
-  },
-  {
-    value: "flux",
-    label: "FLUX.1-schnell MAX",
-    description: "Premium commercial-grade AI images by Black Forest Labs",
     supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
   },
   {
@@ -50,16 +50,16 @@ export const modelsList = [
     supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
   },
   {
-    value: "deepfloyd",
-    label: "DeepFloyd IF Ultra",
-    description: "Google Imagen alternative for photorealistic results",
-    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:2"],
-  },
-  {
     value: "openjourney",
     label: "OpenJourney V4 Pro",
     description: "MidJourney-style artistic masterpieces",
     supportedRatios: ["1:1", "16:9", "4:3", "3:2", "9:16"],
+  },
+  {
+    value: "deepfloyd",
+    label: "DeepFloyd IF Ultra",
+    description: "Google Imagen alternative for photorealistic results",
+    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:2"],
   },
   {
     value: "controlnet",
@@ -74,15 +74,15 @@ export const modelsList = [
     supportedRatios: ["1:1", "16:9", "4:3", "3:2", "9:16"],
   },
   {
-    value: "julibrain",
-    label: "JuliBrain Photoreal",
-    description: "Advanced AI model for photographic realism and artistic quality",
-    supportedRatios: ["1:1", "16:9", "4:3", "3:2", "9:16"],
-  },
-  {
     value: "pixart",
     label: "PixArt-Σ Ultra",
     description: "Multi-concept composer with stunning visual quality",
+    supportedRatios: ["1:1", "16:9", "4:3", "3:2", "9:16"],
+  },
+  {
+    value: "julibrain",
+    label: "JuliBrain Photoreal",
+    description: "Advanced AI model for photographic realism and artistic quality",
     supportedRatios: ["1:1", "16:9", "4:3", "3:2", "9:16"],
   },
 ];

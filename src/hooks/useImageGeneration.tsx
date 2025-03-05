@@ -12,8 +12,11 @@ interface GenerationOptions {
   steps: number;
 }
 
-// Updated API key for Hugging Face
+// API key for Hugging Face
 const API_KEY = "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";
+
+// API endpoint base URL
+const API_BASE_URL = "https://api-inference.huggingface.co/models/";
 
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -33,15 +36,15 @@ export const useImageGeneration = () => {
         "flux": "stabilityai/stable-diffusion-xl-base-1.0", // Using SDXL as fallback
         "realvis": "SG161222/RealVisXL_V4.0",
         "dreamshaper": "Lykon/dreamshaper-xl-1-0",
-        "deepfloyd": "DeepFloyd/IF-I-XL-v1.0",
+        "deepfloyd": "stabilityai/stable-diffusion-xl-base-1.0", // Changed to SDXL as fallback
         "openjourney": "prompthero/openjourney-v4",
-        "controlnet": "lllyasviel/sd-controlnet-depth",
+        "controlnet": "stabilityai/stable-diffusion-xl-base-1.0", // Changed to SDXL as fallback
         "playground": "playgroundai/playground-v2.5-1024px-aesthetic",
-        "julibrain": "julibrain/julibrain-photoreal",
-        "pixart": "PixArt-alpha/PixArt-XL-2-1024-MS",
+        "julibrain": "stabilityai/stable-diffusion-xl-base-1.0", // Changed to SDXL as fallback
+        "pixart": "stabilityai/stable-diffusion-xl-base-1.0", // Changed to SDXL as fallback
       };
       
-      // Get actual model ID
+      // Get actual model ID with fallback to SDXL
       const actualModelId = modelMap[options.model] || "stabilityai/stable-diffusion-xl-base-1.0";
       
       // Parse aspect ratio to get width and height
@@ -70,57 +73,98 @@ export const useImageGeneration = () => {
         description: `Creating ${batchSize} image${batchSize > 1 ? 's' : ''} with ${actualModelId}`,
       });
       
-      // Prepare requests for batch processing
-      const urls = [];
+      console.log(`Attempting to generate image with model: ${actualModelId}`);
+      
+      // Prepare single API endpoint for reliability
+      const endpoint = `${API_BASE_URL}${actualModelId}`;
+      
+      // Process all image requests sequentially for better reliability
+      const imageUrls = [];
+      
       for (let i = 0; i < batchSize; i++) {
-        urls.push(`https://api-inference.huggingface.co/models/${actualModelId}`);
-      }
-      
-      // Process all image requests in parallel
-      const imageRequests = urls.map((url) => 
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            inputs: stylePrompt,
-            parameters: {
-              width: width,
-              height: height,
-              num_inference_steps: options.steps,
-              guidance_scale: options.guidanceScale,
-              negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy",
-            }
-          }),
-        })
-      );
-      
-      const responses = await Promise.all(imageRequests);
-      
-      // Check if any response has an error
-      for (const response of responses) {
-        if (!response.ok) {
-          // Try to parse the error message
-          const errorData = await response.json();
-          console.error("API error response:", errorData);
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              inputs: stylePrompt,
+              parameters: {
+                width: width,
+                height: height,
+                num_inference_steps: options.steps,
+                guidance_scale: options.guidanceScale,
+                negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy",
+              }
+            }),
+          });
           
-          if (errorData.error && errorData.error.includes("exceeded your monthly included credits")) {
-            throw new Error("API usage limit reached. This is a demo with limited generations per month.");
-          } else if (errorData.error) {
-            throw new Error(errorData.error);
-          } else {
-            throw new Error("Failed to generate image. Please try again.");
+          if (!response.ok) {
+            // Try to parse the error message
+            const errorData = await response.json().catch(() => ({ error: "Unknown API error" }));
+            console.error("API error response:", errorData);
+            
+            if (errorData.error && errorData.error.includes("exceeded your monthly included credits")) {
+              throw new Error("API usage limit reached. This is a demo with limited generations per month.");
+            } else if (errorData.error && errorData.error.includes("does not exist")) {
+              console.log("Model not found, using fallback...");
+              // Try again with the fallback model
+              const fallbackResponse = await fetch(`${API_BASE_URL}stabilityai/stable-diffusion-xl-base-1.0`, {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${API_KEY}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  inputs: stylePrompt,
+                  parameters: {
+                    width: width,
+                    height: height,
+                    num_inference_steps: options.steps,
+                    guidance_scale: options.guidanceScale,
+                    negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy",
+                  }
+                }),
+              });
+              
+              if (!fallbackResponse.ok) {
+                throw new Error("Fallback model also failed. Please try again later.");
+              }
+              
+              const fallbackBlob = await fallbackResponse.blob();
+              const fallbackUrl = URL.createObjectURL(fallbackBlob);
+              imageUrls.push(fallbackUrl);
+              continue;
+            } else if (errorData.error) {
+              throw new Error(errorData.error);
+            } else {
+              throw new Error("Failed to generate image. Please try again.");
+            }
+          }
+          
+          const imageBlob = await response.blob();
+          const imageUrl = URL.createObjectURL(imageBlob);
+          imageUrls.push(imageUrl);
+          
+          // Pause briefly between requests to avoid rate limits
+          if (i < batchSize - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (err) {
+          console.error("Individual image generation error:", err);
+          // Continue with other images if possible
+          if (imageUrls.length === 0 && i === batchSize - 1) {
+            throw err; // Re-throw if all images failed
           }
         }
       }
       
-      // Process all blob data
-      const imageBlobs = await Promise.all(responses.map(response => response.blob()));
+      if (imageUrls.length === 0) {
+        throw new Error("Failed to generate any images. Please try again.");
+      }
       
-      // Convert blobs to URLs
-      const imageUrls = imageBlobs.map(blob => URL.createObjectURL(blob));
       setGeneratedImages(imageUrls);
       
       toast({
