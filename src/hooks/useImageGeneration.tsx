@@ -12,7 +12,8 @@ interface GenerationOptions {
   steps: number;
 }
 
-const API_KEY = "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";
+// Using a free API key from Hugging Face - suitable for demo purposes
+const API_KEY = "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";
 
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -63,6 +64,12 @@ export const useImageGeneration = () => {
       // Create style prompt based on the selected style
       const stylePrompt = options.stylePreset ? `${options.prompt}, ${options.stylePreset} style` : options.prompt;
       
+      // Show toast notification
+      toast({
+        title: "Generating images",
+        description: `Creating ${batchSize} image${batchSize > 1 ? 's' : ''} with ${actualModelId}`,
+      });
+      
       // Prepare requests for batch processing
       const urls = [];
       for (let i = 0; i < batchSize; i++) {
@@ -90,22 +97,27 @@ export const useImageGeneration = () => {
         })
       );
       
-      // Show toast notification
-      toast({
-        title: "Generating images",
-        description: `Creating ${batchSize} image${batchSize > 1 ? 's' : ''} with ${actualModelId}`,
-      });
-      
       const responses = await Promise.all(imageRequests);
       
-      // Process all blob data
-      const imageBlobs = await Promise.all(responses.map(async (response) => {
+      // Check if any response has an error
+      for (const response of responses) {
         if (!response.ok) {
+          // Try to parse the error message
           const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to generate image");
+          console.error("API error response:", errorData);
+          
+          if (errorData.error && errorData.error.includes("exceeded your monthly included credits")) {
+            throw new Error("API usage limit reached. This is a demo with limited generations per month.");
+          } else if (errorData.error) {
+            throw new Error(errorData.error);
+          } else {
+            throw new Error("Failed to generate image. Please try again.");
+          }
         }
-        return response.blob();
-      }));
+      }
+      
+      // Process all blob data
+      const imageBlobs = await Promise.all(responses.map(response => response.blob()));
       
       // Convert blobs to URLs
       const imageUrls = imageBlobs.map(blob => URL.createObjectURL(blob));
@@ -114,7 +126,7 @@ export const useImageGeneration = () => {
       toast({
         title: "Images created successfully",
         description: `Created ${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''}`,
-        variant: "default", // Changed from "success" to "default"
+        variant: "default",
       });
       
       return imageUrls;

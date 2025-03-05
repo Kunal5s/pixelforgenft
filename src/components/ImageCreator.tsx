@@ -1,11 +1,11 @@
-
 import { useState, useEffect } from 'react';
-import { Sparkles, Zap, Palette, Download, RefreshCw } from 'lucide-react';
+import { Sparkles, Zap, Palette, Download, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Toast } from "@/components/ui/toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { modelsList, stylePresets, aspectRatios } from '@/data/imageGeneratorData';
 import { useImageGeneration } from '@/hooks/useImageGeneration';
 
@@ -64,7 +64,6 @@ const ImageCreator = () => {
     document.body.removeChild(link);
   };
 
-  // Filter aspect ratios based on selected model
   const selectedModelData = modelsList.find(model => model.value === selectedModel);
   const availableRatios = selectedModelData?.supportedRatios || aspectRatios.map(r => r.value);
   const filteredAspectRatios = aspectRatios.filter(ratio => availableRatios.includes(ratio.value));
@@ -85,6 +84,14 @@ const ImageCreator = () => {
             Our Advanced AI Image Generator allows you to create professional, ultra-detailed images with multiple aspect ratios, artistic styles, and AI models. Customize your generation settings for the best results!
           </p>
         </div>
+
+        <Alert className="mb-6 border-yellow-500/50 bg-yellow-500/10">
+          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          <AlertTitle className="text-yellow-500">Demo Limitations</AlertTitle>
+          <AlertDescription>
+            This demo uses Hugging Face's free API which has monthly generation limits. If images fail to generate, please try again later or with a different model.
+          </AlertDescription>
+        </Alert>
 
         <div className="glass-panel p-6 md:p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8">
@@ -209,7 +216,6 @@ const ImageCreator = () => {
                     }`}
                     onClick={() => {
                       setSelectedModel(model.value);
-                      // If current aspect ratio is not supported by the new model, reset to the first supported ratio
                       if (!model.supportedRatios.includes(aspectRatio)) {
                         setAspectRatio(model.supportedRatios[0]);
                       }
