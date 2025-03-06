@@ -10,6 +10,8 @@ const blogPosts = [
     excerpt: "Learn how to craft the perfect prompts to get exactly the images you want from AI models.",
     category: "Tutorial",
     date: "April 12, 2023",
+    imageUrl: "https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=2670&auto=format&fit=crop",
+    imageAlt: "AI generated abstract art with text overlay showing prompt engineering",
     imageClass: "bg-gradient-to-br from-futuristic-darkgray to-futuristic-black",
     content: `<p>Mastering the art of prompt engineering is essential for getting the most out of AI image generation models. Unlike traditional design tools where each action produces predictable results, AI image generators rely heavily on how well you can communicate your vision through text prompts.</p>
       
@@ -37,6 +39,8 @@ const blogPosts = [
     excerpt: "Explore the rapid advancements in AI image generation technology over the past few years.",
     category: "Research",
     date: "March 28, 2023",
+    imageUrl: "https://images.unsplash.com/photo-1684363863258-3165bcc08f7d?q=80&w=2670&auto=format&fit=crop",
+    imageAlt: "Timeline showing evolution of AI image models with sample outputs",
     imageClass: "bg-gradient-to-br from-futuristic-darkgray/80 to-futuristic-black",
     content: `<p>The landscape of AI image generation has evolved at a breathtaking pace in recent years, revolutionizing how we create and interact with visual content. From the first primitive models to today's sophisticated systems like our own FLUX.1, this journey represents one of AI's most visible and impressive advancement stories.</p>
       
@@ -64,6 +68,8 @@ const blogPosts = [
     excerpt: "Discover how professional artists are incorporating AI tools into their creative processes.",
     category: "Inspiration",
     date: "March 15, 2023",
+    imageUrl: "https://images.unsplash.com/photo-1682186034354-ecc42e709611?q=80&w=2670&auto=format&fit=crop",
+    imageAlt: "Artist working with AI tools in a creative studio environment",
     imageClass: "bg-gradient-to-br from-futuristic-darkgray/60 to-futuristic-black",
     content: `<p>The integration of AI into artistic workflows represents one of the most significant paradigm shifts in creative expression since the digital revolution. Professional artists across disciplines are discovering innovative ways to incorporate these tools, not as replacements for human creativity, but as powerful collaborators and catalysts for new possibilities.</p>
       
@@ -105,6 +111,8 @@ const blogPosts = [
     excerpt: "A deep dive into the ethical implications and considerations when using AI to create artwork.",
     category: "Opinion",
     date: "February 22, 2023",
+    imageUrl: "https://images.unsplash.com/photo-1664575197229-3bbebc281874?q=80&w=2670&auto=format&fit=crop",
+    imageAlt: "Artistic representation of ethical dilemmas in AI art with balanced scales",
     imageClass: "bg-gradient-to-br from-futuristic-darkgray/40 to-futuristic-black",
     content: `<p>The emergence of AI-generated art has catalyzed profound questions about creativity, authorship, and value in the artistic landscape. As these technologies become increasingly sophisticated and accessible, creators and consumers alike must navigate complex ethical terrain that touches on issues from intellectual property to cultural representation.</p>
       
@@ -132,6 +140,8 @@ const blogPosts = [
     excerpt: "Advanced techniques for customizing AI image generators to match your unique artistic vision.",
     category: "Advanced",
     date: "February 10, 2023",
+    imageUrl: "https://images.unsplash.com/photo-1658163724548-29ef00812a54?q=80&w=2670&auto=format&fit=crop",
+    imageAlt: "Technical interface showing AI model fine-tuning parameters with art samples",
     imageClass: "bg-gradient-to-br from-futuristic-darkgray/20 to-futuristic-black",
     content: `<p>For artists seeking to incorporate AI into their workflow while maintaining their distinctive style, fine-tuning offers a powerful solution. Unlike generic prompting, which often produces approximations of your vision, properly fine-tuned models can learn the specific visual language that makes your work unique.</p>
       
@@ -161,6 +171,8 @@ const blogPosts = [
     excerpt: "An insider look at the development process of our flagship AI image generation model.",
     category: "Technology",
     date: "January 30, 2023",
+    imageUrl: "https://images.unsplash.com/photo-1677442135631-33516bd8ea7c?q=80&w=2670&auto=format&fit=crop",
+    imageAlt: "Inside look at AI research lab with data visualization screens and servers",
     imageClass: "bg-gradient-to-br from-futuristic-darkgray/10 to-futuristic-black",
     content: `<p>The development of FLUX.1, PixelForge's flagship AI image generation model, represents over eighteen months of intensive research, engineering, and artistic collaboration. This behind-the-scenes look reveals the challenges, breakthroughs, and design philosophy that shaped what we believe is the most versatile and intuitive AI image generation system available today.</p>
       
@@ -273,7 +285,15 @@ const BlogSection = () => {
               
               return (
                 <div className="glass-panel p-6 rounded-lg">
-                  <div className={`aspect-video ${post.imageClass} rounded-md mb-6`}></div>
+                  {post.imageUrl ? (
+                    <img 
+                      src={post.imageUrl} 
+                      alt={post.imageAlt || post.title} 
+                      className="w-full aspect-video object-cover rounded-md mb-6" 
+                    />
+                  ) : (
+                    <div className={`aspect-video ${post.imageClass} rounded-md mb-6`}></div>
+                  )}
                   <div className="inline-block px-3 py-1 bg-futuristic-yellow/10 rounded-full text-futuristic-yellow text-xs font-medium mb-3">
                     {post.category}
                   </div>
@@ -292,7 +312,15 @@ const BlogSection = () => {
                 className="glass-panel p-4 rounded-lg transform transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(255,209,0,0.1)] cursor-pointer"
                 onClick={() => handlePostClick(post.id)}
               >
-                <div className={`aspect-video ${post.imageClass} rounded-md mb-4`}></div>
+                {post.imageUrl ? (
+                  <img 
+                    src={post.imageUrl} 
+                    alt={post.imageAlt || post.title} 
+                    className="w-full aspect-video object-cover rounded-md mb-4" 
+                  />
+                ) : (
+                  <div className={`aspect-video ${post.imageClass} rounded-md mb-4`}></div>
+                )}
                 <div className="inline-block px-3 py-1 bg-futuristic-yellow/10 rounded-full text-futuristic-yellow text-xs font-medium mb-3">
                   {post.category}
                 </div>
