@@ -64,8 +64,15 @@ export const useImageGeneration = () => {
       width = Math.floor(width / 8) * 8;
       height = Math.floor(height / 8) * 8;
       
-      // Create style prompt based on the selected style
-      const stylePrompt = options.stylePreset ? `${options.prompt}, ${options.stylePreset} style` : options.prompt;
+      // Create a more refined style prompt based on the selected style
+      let stylePrompt = options.prompt;
+      if (options.stylePreset) {
+        // Extract the style name without the emoji
+        const styleName = stylePresets.find(s => s.value === options.stylePreset)?.label.split(' ').slice(0, -1).join(' ');
+        if (styleName) {
+          stylePrompt = `${options.prompt}, in ${styleName} style, high quality, detailed, professional`;
+        }
+      }
       
       // Show toast notification
       toast({
@@ -78,11 +85,14 @@ export const useImageGeneration = () => {
       // Prepare single API endpoint for reliability
       const endpoint = `${API_BASE_URL}${actualModelId}`;
       
-      // Process all image requests sequentially for better reliability
+      // Process all image requests with varied seeds for uniqueness
       const imageUrls = [];
       
       for (let i = 0; i < batchSize; i++) {
         try {
+          // Generate a random seed for each image to ensure uniqueness
+          const randomSeed = Math.floor(Math.random() * 2147483647);
+          
           const response = await fetch(endpoint, {
             method: "POST",
             headers: {
@@ -96,7 +106,8 @@ export const useImageGeneration = () => {
                 height: height,
                 num_inference_steps: options.steps,
                 guidance_scale: options.guidanceScale,
-                negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy",
+                negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, watermark, signature, cut off, low res",
+                seed: randomSeed, // Using unique seed for each image
               }
             }),
           });
@@ -124,7 +135,8 @@ export const useImageGeneration = () => {
                     height: height,
                     num_inference_steps: options.steps,
                     guidance_scale: options.guidanceScale,
-                    negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy",
+                    negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, watermark, signature, cut off, low res",
+                    seed: randomSeed, // Using unique seed for each image
                   }
                 }),
               });
@@ -169,7 +181,7 @@ export const useImageGeneration = () => {
       
       toast({
         title: "Images created successfully",
-        description: `Created ${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''}`,
+        description: `Created ${imageUrls.length} unique image${imageUrls.length > 1 ? 's' : ''}`,
         variant: "default",
       });
       
@@ -201,5 +213,8 @@ export const useImageGeneration = () => {
     }
   };
 };
+
+// Get style presets for better style prompting
+import { stylePresets } from '@/data/imageGeneratorData';
 
 export default useImageGeneration;

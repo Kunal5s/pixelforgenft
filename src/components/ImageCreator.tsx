@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Sparkles, Zap, Palette, Download, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Sparkles, Zap, Palette, Download, RefreshCw, AlertTriangle, Info } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -75,7 +76,7 @@ const ImageCreator = () => {
       <div className="container-custom relative z-10">
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-1 rounded-full bg-futuristic-yellow/10 border border-futuristic-yellow/30 mb-4">
-            <span className="text-sm font-medium text-futuristic-yellow">AI Image Generator</span>
+            <span className="text-sm font-medium text-futuristic-yellow">Enhanced AI Image Generator</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Create Stunning, <span className="text-futuristic-yellow">High-Quality</span> Artwork
@@ -85,14 +86,24 @@ const ImageCreator = () => {
           </p>
         </div>
 
-        <Alert className="mb-6 border-yellow-500/50 bg-yellow-500/10">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <AlertTitle className="text-yellow-500">Best Practices</AlertTitle>
-          <AlertDescription>
-            For best results, try using the "Stable Diffusion XL 1.5+" model which is most reliable. If a model fails, 
-            the system will automatically fall back to SDXL to ensure you always get an image.
-          </AlertDescription>
-        </Alert>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Alert className="border-yellow-500/50 bg-yellow-500/10">
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <AlertTitle className="text-yellow-500">Best Practices</AlertTitle>
+            <AlertDescription>
+              For best results, try using the "Stable Diffusion XL 1.5+" model which is most reliable. If a model fails, 
+              the system will automatically fall back to SDXL to ensure you always get an image.
+            </AlertDescription>
+          </Alert>
+          
+          <Alert className="border-blue-500/50 bg-blue-500/10">
+            <Info className="h-4 w-4 text-blue-500" />
+            <AlertTitle className="text-blue-500">Enhanced Image Generation</AlertTitle>
+            <AlertDescription>
+              All models now generate unique images when creating multiple images at once. Each image uses different random seeds to ensure variety and quality.
+            </AlertDescription>
+          </Alert>
+        </div>
 
         <div className="glass-panel p-6 md:p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-8">
@@ -187,7 +198,7 @@ const ImageCreator = () => {
               </div>
               
               <div className="mb-6">
-                <label className="text-sm text-white/80 mb-2 block">Batch Size</label>
+                <label className="text-sm text-white/80 mb-2 block">Batch Size (Unique Images)</label>
                 <Select value={batchSize.toString()} onValueChange={(value) => setBatchSize(Number(value))}>
                   <SelectTrigger className="bg-futuristic-darkgray border-futuristic-gray text-white">
                     <SelectValue placeholder="Select batch size" />
@@ -195,13 +206,13 @@ const ImageCreator = () => {
                   <SelectContent className="bg-futuristic-darkgray border-futuristic-gray text-white">
                     {[1, 2, 4, 6, 8, 10].map((size) => (
                       <SelectItem key={size} value={size.toString()}>
-                        {size} {size > 1 ? "images" : "image"}
+                        {size} {size > 1 ? "unique images" : "image"}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-white/60 mt-2">
-                  Generate multiple unique images in one go.
+                  Generate multiple unique images with different variations of your prompt.
                 </p>
               </div>
               
@@ -238,12 +249,12 @@ const ImageCreator = () => {
                 {isGenerating ? (
                   <>
                     <div className="animate-spin w-5 h-5 border-2 border-futuristic-black border-t-transparent rounded-full"></div>
-                    <span>Generating...</span>
+                    <span>Generating Unique Images...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    <span>Generate Image</span>
+                    <span>Generate {batchSize > 1 ? `${batchSize} Unique Images` : 'Image'}</span>
                   </>
                 )}
               </button>

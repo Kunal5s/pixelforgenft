@@ -33,7 +33,7 @@ export const modelsList = [
   },
   {
     value: "sd-lightning",
-    label: "SD Lightning V2",
+    label: "SD Lightning V2 Ultra",
     description: "Lightning-fast generation with exceptional detail retention",
     supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
   },
@@ -45,7 +45,7 @@ export const modelsList = [
   },
   {
     value: "dreamshaper",
-    label: "DreamShaper XL Pro",
+    label: "DreamShaper XL Pro V2",
     description: "Creative and artistic high-detail illustrations and concepts",
     supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
   },
