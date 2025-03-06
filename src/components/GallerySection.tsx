@@ -6,25 +6,61 @@ const galleryItems = [
   {
     category: "Photorealistic",
     images: [
-      { alt: "Photorealistic mountain landscape", description: "Hyper-detailed mountain landscape at sunset" },
-      { alt: "Photorealistic portrait", description: "Studio portrait with natural lighting" },
-      { alt: "Photorealistic architecture", description: "Modern architecture with glass facade" },
+      { 
+        alt: "Photorealistic mountain landscape", 
+        description: "Hyper-detailed mountain landscape at sunset",
+        url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+      },
+      { 
+        alt: "Photorealistic portrait", 
+        description: "Studio portrait with natural lighting",
+        url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=688&q=80"
+      },
+      { 
+        alt: "Photorealistic architecture", 
+        description: "Modern architecture with glass facade",
+        url: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+      },
     ]
   },
   {
     category: "Cinematic",
     images: [
-      { alt: "Cinematic sci-fi scene", description: "Futuristic city at night with neon lights" },
-      { alt: "Cinematic action scene", description: "Epic battle scene with dramatic lighting" },
-      { alt: "Cinematic nature scene", description: "Sweeping vista of a magical forest" },
+      { 
+        alt: "Cinematic sci-fi scene", 
+        description: "Futuristic city at night with neon lights",
+        url: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80"
+      },
+      { 
+        alt: "Cinematic action scene", 
+        description: "Epic battle scene with dramatic lighting",
+        url: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1025&q=80"
+      },
+      { 
+        alt: "Cinematic nature scene", 
+        description: "Sweeping vista of a magical forest",
+        url: "https://images.unsplash.com/photo-1511497584788-876760111969?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1032&q=80"
+      },
     ]
   },
   {
     category: "Stylized",
     images: [
-      { alt: "Anime style artwork", description: "Character in anime art style" },
-      { alt: "Watercolor style artwork", description: "Landscape in watercolor style" },
-      { alt: "Abstract style artwork", description: "Abstract composition with vibrant colors" },
+      { 
+        alt: "Anime style artwork", 
+        description: "Character in anime art style",
+        url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80"
+      },
+      { 
+        alt: "Watercolor style artwork", 
+        description: "Landscape in watercolor style",
+        url: "https://images.unsplash.com/photo-1579541671172-43429ce17aca?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=685&q=80"
+      },
+      { 
+        alt: "Abstract style artwork", 
+        description: "Abstract composition with vibrant colors",
+        url: "https://images.unsplash.com/photo-1549490349-8643362247b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80"
+      },
     ]
   }
 ];
@@ -72,16 +108,26 @@ const GallerySection = () => {
                 className="glass-panel overflow-hidden group transition-all duration-500"
               >
                 <div className="relative aspect-[4/3] bg-futuristic-darkgray overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-futuristic-yellow/20 to-transparent opacity-70"></div>
-                  <div className="absolute inset-0 bg-noise opacity-10"></div>
-                  
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    {activeCategory === "Photorealistic" ? (
-                      <Camera className="text-futuristic-yellow/60" size={48} />
-                    ) : (
-                      <Sparkles className="text-futuristic-yellow/60" size={48} />
-                    )}
-                  </div>
+                  {image.url ? (
+                    <img 
+                      src={image.url} 
+                      alt={image.alt}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-br from-futuristic-yellow/20 to-transparent opacity-70"></div>
+                      <div className="absolute inset-0 bg-noise opacity-10"></div>
+                      
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {activeCategory === "Photorealistic" ? (
+                          <Camera className="text-futuristic-yellow/60" size={48} />
+                        ) : (
+                          <Sparkles className="text-futuristic-yellow/60" size={48} />
+                        )}
+                      </div>
+                    </>
+                  )}
                   
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-glass-black to-transparent">
                     <p className="text-white text-sm">
