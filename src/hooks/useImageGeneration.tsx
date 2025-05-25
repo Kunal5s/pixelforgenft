@@ -36,13 +36,64 @@ export const useImageGeneration = () => {
       width = Math.floor(1024 * (widthRatio / heightRatio));
     }
 
-    // Apply style to prompt
+    // Apply style to prompt with better style integration
     let stylePrompt = options.prompt;
     if (options.stylePreset) {
-      const styleName = stylePresets.find(s => s.value === options.stylePreset)?.label.split(' ').slice(0, -1).join(' ');
-      if (styleName) {
-        stylePrompt = `${options.prompt}, in ${styleName} style, high quality, detailed, professional`;
-      }
+      // Handle new categorized styles
+      const styleMappings = {
+        // Styles
+        '3d': '3D rendered style',
+        '8-bit': '8-bit pixel art style',
+        'analogue': 'analogue photography style',
+        'anime': 'anime art style',
+        'cartoon': 'cartoon illustration style',
+        'collage': 'collage art style',
+        'cookie': 'cookie dough texture style',
+        'crayon': 'crayon drawing style',
+        'doodle': 'doodle sketch style',
+        'dough': 'clay dough sculpture style',
+        'felt': 'felt fabric texture style',
+        'illustrated': 'hand illustrated style',
+        'marker': 'marker drawing style',
+        'mechanical': 'mechanical blueprint style',
+        'painting': 'traditional painting style',
+        'paper': 'paper craft style',
+        'pin': 'pin-up art style',
+        'plushie': 'plushie toy style',
+        'realistic': 'photorealistic style',
+        'tattoo': 'tattoo art style',
+        'woodblock': 'woodblock print style',
+        // Moods
+        'sweets': 'sweet candy-like mood',
+        'classical': 'classical elegant mood',
+        'cyberpunk': 'cyberpunk futuristic mood',
+        'dreamy': 'dreamy ethereal mood',
+        'glowy': 'glowing luminous mood',
+        'gothic': 'gothic dark mood',
+        'kawaii': 'kawaii cute mood',
+        'mystical': 'mystical magical mood',
+        'trippy': 'trippy psychedelic mood',
+        'tropical': 'tropical vibrant mood',
+        'steampunk': 'steampunk industrial mood',
+        'wasteland': 'post-apocalyptic wasteland mood',
+        // Lighting
+        'bright': 'bright lighting',
+        'dark': 'dark moody lighting',
+        'neon': 'neon lighting',
+        'sunset': 'sunset golden hour lighting',
+        'misty': 'misty atmospheric lighting',
+        'ethereal': 'ethereal soft lighting',
+        // Colors
+        'cool': 'cool color palette',
+        'earthy': 'earthy natural color palette',
+        'indigo': 'indigo blue color palette',
+        'infrared': 'infrared thermal color palette',
+        'pastel': 'pastel soft color palette',
+        'warm': 'warm color palette',
+      };
+      
+      const styleDescription = styleMappings[options.stylePreset] || options.stylePreset;
+      stylePrompt = `${options.prompt}, ${styleDescription}, high quality, detailed, professional`;
     }
 
     const modelEndpoint = options.model === "google-imagen-3" ? "imagen-3.0-generate-001" : "imagen-3.0-fast-generate-001";
@@ -144,10 +195,7 @@ export const useImageGeneration = () => {
     
     let stylePrompt = options.prompt;
     if (options.stylePreset) {
-      const styleName = stylePresets.find(s => s.value === options.stylePreset)?.label.split(' ').slice(0, -1).join(' ');
-      if (styleName) {
-        stylePrompt = `${options.prompt}, in ${styleName} style, high quality, detailed, professional`;
-      }
+      stylePrompt = `${options.prompt}, ${options.stylePreset} style, high quality, detailed, professional`;
     }
     
     const endpoint = `${HUGGING_FACE_BASE_URL}${actualModelId}`;
@@ -299,6 +347,6 @@ export const useImageGeneration = () => {
   };
 };
 
-import { stylePresets } from '@/data/imageGeneratorData';
+import { styleCategories } from '@/data/imageGeneratorData';
 
 export default useImageGeneration;

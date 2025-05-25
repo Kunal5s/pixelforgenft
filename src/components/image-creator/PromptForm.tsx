@@ -1,7 +1,8 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { aspectRatios, stylePresets } from '@/data/imageGeneratorData';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { aspectRatios, styleCategories } from '@/data/imageGeneratorData';
 
 interface PromptFormProps {
   prompt: string;
@@ -57,21 +58,72 @@ const PromptForm = ({
             </SelectContent>
           </Select>
         </div>
-        
+      </div>
+
+      {/* New Style Categories */}
+      <div className="space-y-6 mb-6">
+        {/* Styles */}
         <div>
-          <label className="text-sm text-white/80 mb-2 block">Style Preset</label>
-          <Select value={style} onValueChange={setStyle}>
-            <SelectTrigger className="bg-futuristic-darkgray border-futuristic-gray text-white">
-              <SelectValue placeholder="Select style" />
-            </SelectTrigger>
-            <SelectContent className="bg-futuristic-darkgray border-futuristic-gray text-white max-h-[300px]">
-              {stylePresets.map((stylePreset) => (
-                <SelectItem key={stylePreset.value} value={stylePreset.value}>
-                  {stylePreset.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="text-sm text-white/80 mb-3 block">Styles</label>
+          <ToggleGroup type="single" value={style} onValueChange={setStyle} className="flex flex-wrap gap-2">
+            {styleCategories.styles.map((styleOption) => (
+              <ToggleGroupItem
+                key={styleOption.value}
+                value={styleOption.value}
+                className="bg-futuristic-darkgray border-futuristic-gray text-white hover:bg-futuristic-yellow/20 data-[state=on]:bg-futuristic-yellow/30 data-[state=on]:text-futuristic-yellow text-xs px-3 py-1"
+              >
+                {styleOption.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+
+        {/* Moods */}
+        <div>
+          <label className="text-sm text-white/80 mb-3 block">Moods</label>
+          <ToggleGroup type="single" value={style} onValueChange={setStyle} className="flex flex-wrap gap-2">
+            {styleCategories.moods.map((moodOption) => (
+              <ToggleGroupItem
+                key={moodOption.value}
+                value={moodOption.value}
+                className="bg-futuristic-darkgray border-futuristic-gray text-white hover:bg-futuristic-yellow/20 data-[state=on]:bg-futuristic-yellow/30 data-[state=on]:text-futuristic-yellow text-xs px-3 py-1"
+              >
+                {moodOption.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+
+        {/* Lighting */}
+        <div>
+          <label className="text-sm text-white/80 mb-3 block">Lighting</label>
+          <ToggleGroup type="single" value={style} onValueChange={setStyle} className="flex flex-wrap gap-2">
+            {styleCategories.lighting.map((lightingOption) => (
+              <ToggleGroupItem
+                key={lightingOption.value}
+                value={lightingOption.value}
+                className="bg-futuristic-darkgray border-futuristic-gray text-white hover:bg-futuristic-yellow/20 data-[state=on]:bg-futuristic-yellow/30 data-[state=on]:text-futuristic-yellow text-xs px-3 py-1"
+              >
+                {lightingOption.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+
+        {/* Colors */}
+        <div>
+          <label className="text-sm text-white/80 mb-3 block">Colors</label>
+          <ToggleGroup type="single" value={style} onValueChange={setStyle} className="flex flex-wrap gap-2">
+            {styleCategories.colors.map((colorOption) => (
+              <ToggleGroupItem
+                key={colorOption.value}
+                value={colorOption.value}
+                className="bg-futuristic-darkgray border-futuristic-gray text-white hover:bg-futuristic-yellow/20 data-[state=on]:bg-futuristic-yellow/30 data-[state=on]:text-futuristic-yellow text-xs px-3 py-1"
+              >
+                {colorOption.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
       </div>
     </div>

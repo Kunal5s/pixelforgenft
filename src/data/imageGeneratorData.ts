@@ -99,7 +99,64 @@ export const modelsList = [
   },
 ];
 
-// Style presets with emojis
+// New categorized style presets
+export const styleCategories = {
+  styles: [
+    { value: "3d", label: "3D 🎮" },
+    { value: "8-bit", label: "8-bit 🕹️" },
+    { value: "analogue", label: "Analogue 📷" },
+    { value: "anime", label: "Anime 🌸" },
+    { value: "cartoon", label: "Cartoon 🎨" },
+    { value: "collage", label: "Collage ✂️" },
+    { value: "cookie", label: "Cookie 🍪" },
+    { value: "crayon", label: "Crayon 🖍️" },
+    { value: "doodle", label: "Doodle ✏️" },
+    { value: "dough", label: "Dough 🍞" },
+    { value: "felt", label: "Felt 🧶" },
+    { value: "illustrated", label: "Illustrated 📚" },
+    { value: "marker", label: "Marker 🖊️" },
+    { value: "mechanical", label: "Mechanical ⚙️" },
+    { value: "painting", label: "Painting 🎭" },
+    { value: "paper", label: "Paper 📄" },
+    { value: "pin", label: "Pin 📌" },
+    { value: "plushie", label: "Plushie 🧸" },
+    { value: "realistic", label: "Realistic 📸" },
+    { value: "tattoo", label: "Tattoo ⚡" },
+    { value: "woodblock", label: "Woodblock 🪵" },
+  ],
+  moods: [
+    { value: "sweets", label: "Sweets 🍭" },
+    { value: "classical", label: "Classical 🏛️" },
+    { value: "cyberpunk", label: "Cyberpunk 🤖" },
+    { value: "dreamy", label: "Dreamy ☁️" },
+    { value: "glowy", label: "Glowy ✨" },
+    { value: "gothic", label: "Gothic 🦇" },
+    { value: "kawaii", label: "Kawaii 💖" },
+    { value: "mystical", label: "Mystical 🔮" },
+    { value: "trippy", label: "Trippy 🌀" },
+    { value: "tropical", label: "Tropical 🌺" },
+    { value: "steampunk", label: "Steampunk ⚙️" },
+    { value: "wasteland", label: "Wasteland 🏜️" },
+  ],
+  lighting: [
+    { value: "bright", label: "Bright ☀️" },
+    { value: "dark", label: "Dark 🌙" },
+    { value: "neon", label: "Neon 💡" },
+    { value: "sunset", label: "Sunset 🌅" },
+    { value: "misty", label: "Misty 🌫️" },
+    { value: "ethereal", label: "Ethereal ✨" },
+  ],
+  colors: [
+    { value: "cool", label: "Cool 🧊" },
+    { value: "earthy", label: "Earthy 🌱" },
+    { value: "indigo", label: "Indigo 💙" },
+    { value: "infrared", label: "Infrared 🔴" },
+    { value: "pastel", label: "Pastel 🌈" },
+    { value: "warm", label: "Warm 🔥" },
+  ],
+};
+
+// Legacy style presets for backward compatibility
 export const stylePresets = [
   // Basic Art Styles
   { value: "digital-art", label: "Modern Digital Art 🖌️" },
