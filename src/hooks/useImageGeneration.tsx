@@ -24,25 +24,10 @@ export const useImageGeneration = () => {
   const [error, setError] = useState<string | null>(null);
 
   const generateWithGoogleImagen = async (options: GenerationOptions, batchSize: number) => {
-    console.log('Generating with Google Imagen 3:', options);
+    console.log('=== GOOGLE IMAGEN 3 GENERATION START ===');
+    console.log('Options:', options);
+    console.log('API Key (first 10 chars):', GOOGLE_GEMINI_API_KEY.substring(0, 10));
     
-    // Parse aspect ratio to get dimensions
-    const [widthRatio, heightRatio] = options.aspectRatio.split(':').map(Number);
-    let width = 1024, height = 1024;
-    
-    // Calculate dimensions based on aspect ratio
-    if (widthRatio > heightRatio) {
-      width = 1024;
-      height = Math.floor(1024 * (heightRatio / widthRatio));
-    } else if (heightRatio > widthRatio) {
-      height = 1024;
-      width = Math.floor(1024 * (widthRatio / heightRatio));
-    }
-
-    // Ensure dimensions are multiples of 8
-    width = Math.floor(width / 8) * 8;
-    height = Math.floor(height / 8) * 8;
-
     // Enhanced prompt with style integration
     let enhancedPrompt = options.prompt;
     if (options.stylePreset && options.stylePreset !== '') {
@@ -103,13 +88,13 @@ export const useImageGeneration = () => {
     }
 
     console.log('Enhanced prompt:', enhancedPrompt);
-    console.log('Dimensions:', { width, height });
 
-    const modelEndpoint = options.model === "google-imagen-3" ? "imagen-3.0-generate-001" : "imagen-3.0-fast-generate-001";
     const imageUrls = [];
     
     for (let i = 0; i < batchSize; i++) {
       try {
+        console.log(`=== Generating image ${i + 1}/${batchSize} ===`);
+
         const requestBody = {
           prompt: enhancedPrompt,
           config: {
@@ -121,9 +106,12 @@ export const useImageGeneration = () => {
           }
         };
 
-        console.log('Request body:', requestBody);
+        console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateImage?key=${GOOGLE_GEMINI_API_KEY}`, {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:generateImage?key=${GOOGLE_GEMINI_API_KEY}`;
+        console.log('API URL:', apiUrl);
+
+        const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -132,48 +120,73 @@ export const useImageGeneration = () => {
         });
 
         console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Google Imagen API error response:", errorText);
+          console.error("Google Imagen API error - Status:", response.status);
+          console.error("Google Imagen API error - Response:", responseText);
           
           let errorData;
           try {
-            errorData = JSON.parse(errorText);
+            errorData = JSON.parse(responseText);
           } catch {
-            errorData = { error: { message: errorText } };
+            errorData = { error: { message: responseText } };
           }
           
-          throw new Error(errorData.error?.message || `API Error: ${response.status} - ${errorText}`);
+          if (response.status === 403) {
+            throw new Error("API key authentication failed. Please check your Google Gemini API key permissions for Imagen 3.");
+          } else if (response.status === 400) {
+            throw new Error("Invalid request format. Please try a different prompt or settings.");
+          } else {
+            throw new Error(errorData.error?.message || `API Error: ${response.status} - ${responseText}`);
+          }
         }
 
-        const result = await response.json();
-        console.log('API Response:', result);
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError);
+          throw new Error('Invalid response format from Google Imagen API');
+        }
+
+        console.log('Parsed API Response:', result);
         
-        if (result.candidates && result.candidates[0] && result.candidates[0].image) {
+        if (result.candidates && result.candidates[0] && result.candidates[0].image && result.candidates[0].image.data) {
           // Convert base64 to blob URL
           const base64Data = result.candidates[0].image.data;
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let j = 0; j < byteCharacters.length; j++) {
-            byteNumbers[j] = byteCharacters.charCodeAt(j);
+          console.log('Base64 data length:', base64Data.length);
+          
+          try {
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let j = 0; j < byteCharacters.length; j++) {
+              byteNumbers[j] = byteCharacters.charCodeAt(j);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/png' });
+            const imageUrl = URL.createObjectURL(blob);
+            imageUrls.push(imageUrl);
+            console.log('✅ Image generated successfully:', i + 1);
+          } catch (conversionError) {
+            console.error('Error converting base64 to blob:', conversionError);
+            throw new Error('Failed to process generated image data');
           }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'image/png' });
-          const imageUrl = URL.createObjectURL(blob);
-          imageUrls.push(imageUrl);
-          console.log('Image generated successfully:', i + 1);
         } else {
-          console.error('No image data in response:', result);
-          throw new Error("No image data received from Google Imagen");
+          console.error('❌ No image data in response. Response structure:', JSON.stringify(result, null, 2));
+          throw new Error("No image data received from Google Imagen. The API may be experiencing issues.");
         }
 
         // Small delay between requests
         if (i < batchSize - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log('Waiting 1 second before next request...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       } catch (err) {
-        console.error(`Google Imagen generation error for image ${i + 1}:`, err);
+        console.error(`❌ Google Imagen generation error for image ${i + 1}:`, err);
         // If this is the first image and it fails, throw the error
         if (imageUrls.length === 0 && i === batchSize - 1) {
           throw err;
@@ -181,6 +194,7 @@ export const useImageGeneration = () => {
       }
     }
 
+    console.log(`=== GENERATION COMPLETE: ${imageUrls.length}/${batchSize} images generated ===`);
     return imageUrls;
   };
 
@@ -315,12 +329,13 @@ export const useImageGeneration = () => {
       
       const isGoogleModel = options.model.startsWith("google-imagen");
       
-      console.log('Starting image generation:', { 
+      console.log('🚀 Starting image generation:', { 
         model: options.model, 
         isGoogleModel, 
         batchSize,
         aspectRatio: options.aspectRatio,
-        style: options.stylePreset 
+        style: options.stylePreset,
+        prompt: options.prompt.substring(0, 50) + '...'
       });
       
       toast({
@@ -337,7 +352,7 @@ export const useImageGeneration = () => {
       }
       
       if (!imageUrls || imageUrls.length === 0) {
-        throw new Error("Failed to generate any images. Please try again.");
+        throw new Error("Failed to generate any images. Please try again with a different prompt or settings.");
       }
       
       setGeneratedImages(imageUrls);
@@ -350,7 +365,7 @@ export const useImageGeneration = () => {
       
       return imageUrls;
     } catch (err: any) {
-      console.error("Image generation error:", err);
+      console.error("❌ Image generation error:", err);
       setError(err.message || 'Failed to generate image. Please try again.');
       
       toast({
