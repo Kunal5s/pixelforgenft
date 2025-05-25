@@ -1,8 +1,14 @@
-
 import { useState } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
 
 const models = [
+  {
+    id: "google-imagen-3",
+    name: "Google Imagen 3 Ultra",
+    description: "Google's most advanced text-to-image model with exceptional quality, style understanding, and prompt adherence.",
+    specs: ["Ultra-high quality generation", "Advanced style understanding", "Complex prompt comprehension", "Up to 2048x2048 resolution"],
+    tag: "Latest"
+  },
   {
     id: "flux",
     name: "FLUX.1-schnell MAX",
@@ -18,23 +24,16 @@ const models = [
     tag: "Photorealistic"
   },
   {
-    id: "imagen",
-    name: "Google Imagen 3",
-    description: "Google's advanced text-to-image model with exceptional understanding of complex prompts and compositions.",
-    specs: ["Complex prompt handling", "Multi-subject compositions", "Coherent scenes", "Up to 1536x1536 resolution"],
-    tag: "Versatile"
-  },
-  {
-    id: "dalle",
-    name: "DALLE 3",
-    description: "OpenAI's latest image generation model with superior artistic style understanding and creative interpretations.",
-    specs: ["Artistic style mastery", "Creative interpretation", "Abstract concept visualization", "Up to 1792x1792 resolution"],
-    tag: "Creative"
+    id: "sdxl",
+    name: "Stable Diffusion XL",
+    description: "Industry-standard model with reliable results and strong community support for diverse image generation.",
+    specs: ["Reliable performance", "Versatile style range", "Strong community", "Up to 1536x1536 resolution"],
+    tag: "Reliable"
   }
 ];
 
 const ModelsSection = () => {
-  const [activeModel, setActiveModel] = useState("flux");
+  const [activeModel, setActiveModel] = useState("google-imagen-3");
 
   return (
     <section id="models" className="section-padding bg-futuristic-black relative">

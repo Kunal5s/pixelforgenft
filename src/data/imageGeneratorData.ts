@@ -14,9 +14,21 @@ export const aspectRatios = [
 // Model definitions with supported aspect ratios
 export const modelsList = [
   {
+    value: "google-imagen-3",
+    label: "Google Imagen 3 Ultra ⭐",
+    description: "Google's latest flagship model with exceptional quality and prompt understanding (Recommended)",
+    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
+  },
+  {
+    value: "google-imagen-3-fast",
+    label: "Google Imagen 3 Fast",
+    description: "Optimized version of Imagen 3 for faster generation with maintained quality",
+    supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
+  },
+  {
     value: "sdxl-1.5",
-    label: "Stable Diffusion XL 1.5+ ⭐",
-    description: "Ultra-reliable, high-detail professional image creation (Recommended)",
+    label: "Stable Diffusion XL 1.5+",
+    description: "Ultra-reliable, high-detail professional image creation",
     supportedRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5"],
   },
   {

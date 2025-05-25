@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useImageGeneration } from '@/hooks/useImageGeneration';
 import { modelsList, aspectRatios } from '@/data/imageGeneratorData';
@@ -13,7 +12,7 @@ import GenerateButton from './image-creator/GenerateButton';
 
 const ImageCreator = () => {
   const [prompt, setPrompt] = useState("");
-  const [selectedModel, setSelectedModel] = useState("flux");
+  const [selectedModel, setSelectedModel] = useState("google-imagen-3");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [style, setStyle] = useState("cinematic");
   const [quality, setQuality] = useState([80]);
