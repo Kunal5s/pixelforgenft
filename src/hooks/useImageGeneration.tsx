@@ -12,18 +12,18 @@ interface GenerationOptions {
   steps: number;
 }
 
-// Updated Google Gemini API key
-const GOOGLE_GEMINI_API_KEY = "AIzaSyC2xfjKGEIFLRo9gQlAJGdzq6t52hOEYP8";
+// Hugging Face API key
+const HUGGING_FACE_API_KEY = "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";
 
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const generateWithGoogleImagen = async (options: GenerationOptions, batchSize: number) => {
-    console.log('=== GOOGLE IMAGEN GENERATION START ===');
+  const generateWithHuggingFace = async (options: GenerationOptions, batchSize: number) => {
+    console.log('=== HUGGING FACE GENERATION START ===');
     console.log('Options:', options);
-    console.log('API Key (first 10 chars):', GOOGLE_GEMINI_API_KEY.substring(0, 10));
+    console.log('API Key (first 10 chars):', HUGGING_FACE_API_KEY.substring(0, 10));
     
     // Enhanced prompt with style integration
     let enhancedPrompt = options.prompt;
@@ -86,37 +86,50 @@ export const useImageGeneration = () => {
 
     console.log('Enhanced prompt:', enhancedPrompt);
 
+    // Model mapping for Hugging Face
+    const modelMappings: Record<string, string> = {
+      'google-imagen-3': 'stabilityai/stable-diffusion-xl-base-1.0',
+      'google-imagen-4': 'stabilityai/stable-diffusion-xl-base-1.0',
+      'flux': 'black-forest-labs/FLUX.1-schnell',
+      'realvis': 'SG161222/RealVisXL_V4.0',
+      'sdxl': 'stabilityai/stable-diffusion-xl-base-1.0'
+    };
+
+    const huggingFaceModel = modelMappings[options.model] || 'stabilityai/stable-diffusion-xl-base-1.0';
+    console.log('Using Hugging Face model:', huggingFaceModel);
+
     const imageUrls = [];
     
     for (let i = 0; i < batchSize; i++) {
       try {
         console.log(`=== Generating image ${i + 1}/${batchSize} ===`);
 
-        // Determine which Imagen model to use based on the selected model
-        let modelName = "imagen-3.0-generate-001";
-        if (options.model.includes("imagen-4")) {
-          modelName = "imagen-3.0-generate-001"; // Use Imagen 3 as fallback since Imagen 4 might not be available
-        }
+        // Parse aspect ratio for dimensions
+        const [widthRatio, heightRatio] = options.aspectRatio.split(':').map(Number);
+        const baseSize = 512;
+        const width = Math.round(baseSize * Math.sqrt((widthRatio * widthRatio) / (widthRatio * widthRatio + heightRatio * heightRatio)) / widthRatio * widthRatio);
+        const height = Math.round(baseSize * Math.sqrt((heightRatio * heightRatio) / (widthRatio * widthRatio + heightRatio * heightRatio)) / heightRatio * heightRatio);
 
         const requestBody = {
-          prompt: enhancedPrompt,
-          config: {
-            aspectRatio: options.aspectRatio.replace(':', '_'),
-            negativePrompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, watermark, signature, text, logo, cut off, low res, pixelated, grainy",
-            personGeneration: "allow_adult",
-            safetyFilterLevel: "block_only_high",
-            includeRaiInfo: false
+          inputs: enhancedPrompt,
+          parameters: {
+            guidance_scale: options.guidanceScale,
+            num_inference_steps: options.steps,
+            width: Math.min(width, 1024),
+            height: Math.min(height, 1024),
+            negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, watermark, signature, text, logo, cut off, low res, pixelated, grainy"
           }
         };
 
         console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateImage?key=${GOOGLE_GEMINI_API_KEY}`;
+        const apiUrl = `https://api-inference.huggingface.co/models/${huggingFaceModel}`;
         console.log('API URL:', apiUrl);
 
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
+            "Authorization": `Bearer ${HUGGING_FACE_API_KEY}`,
             "Content-Type": "application/json"
           },
           body: JSON.stringify(requestBody),
@@ -125,71 +138,50 @@ export const useImageGeneration = () => {
         console.log('Response status:', response.status);
         console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
-
         if (!response.ok) {
-          console.error("Google Imagen API error - Status:", response.status);
-          console.error("Google Imagen API error - Response:", responseText);
+          const errorText = await response.text();
+          console.error("Hugging Face API error - Status:", response.status);
+          console.error("Hugging Face API error - Response:", errorText);
           
-          let errorData;
-          try {
-            errorData = JSON.parse(responseText);
-          } catch {
-            errorData = { error: { message: responseText } };
-          }
-          
-          if (response.status === 403) {
-            throw new Error("API key authentication failed. Please check your Google Gemini API key permissions for Imagen.");
+          if (response.status === 401) {
+            throw new Error("API key authentication failed. Please check your Hugging Face API key permissions.");
           } else if (response.status === 400) {
             throw new Error("Invalid request format. Please try a different prompt or settings.");
+          } else if (response.status === 503) {
+            throw new Error("Model is loading. Please wait a moment and try again.");
           } else {
-            throw new Error(errorData.error?.message || `API Error: ${response.status} - ${responseText}`);
+            throw new Error(`API Error: ${response.status} - ${errorText}`);
           }
         }
 
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse response as JSON:', parseError);
-          throw new Error('Invalid response format from Google Imagen API');
+        // Check if response is JSON (error) or blob (image)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          if (errorData.error) {
+            throw new Error(errorData.error);
+          }
         }
 
-        console.log('Parsed API Response:', result);
+        // Handle image response
+        const blob = await response.blob();
+        console.log('Blob size:', blob.size);
         
-        if (result.candidates && result.candidates[0] && result.candidates[0].image && result.candidates[0].image.data) {
-          // Convert base64 to blob URL
-          const base64Data = result.candidates[0].image.data;
-          console.log('Base64 data length:', base64Data.length);
-          
-          try {
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let j = 0; j < byteCharacters.length; j++) {
-              byteNumbers[j] = byteCharacters.charCodeAt(j);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'image/png' });
-            const imageUrl = URL.createObjectURL(blob);
-            imageUrls.push(imageUrl);
-            console.log('✅ Image generated successfully:', i + 1);
-          } catch (conversionError) {
-            console.error('Error converting base64 to blob:', conversionError);
-            throw new Error('Failed to process generated image data');
-          }
-        } else {
-          console.error('❌ No image data in response. Response structure:', JSON.stringify(result, null, 2));
-          throw new Error("No image data received from Google Imagen. The API may be experiencing issues.");
+        if (blob.size === 0) {
+          throw new Error("Empty response from Hugging Face API");
         }
 
-        // Small delay between requests
+        const imageUrl = URL.createObjectURL(blob);
+        imageUrls.push(imageUrl);
+        console.log('✅ Image generated successfully:', i + 1);
+
+        // Small delay between requests to avoid rate limiting
         if (i < batchSize - 1) {
-          console.log('Waiting 1 second before next request...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log('Waiting 2 seconds before next request...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       } catch (err) {
-        console.error(`❌ Google Imagen generation error for image ${i + 1}:`, err);
+        console.error(`❌ Hugging Face generation error for image ${i + 1}:`, err);
         // If this is the first image and it fails, throw the error
         if (imageUrls.length === 0 && i === batchSize - 1) {
           throw err;
@@ -216,10 +208,10 @@ export const useImageGeneration = () => {
       
       toast({
         title: "Generating images",
-        description: `Creating ${batchSize} image${batchSize > 1 ? 's' : ''} with Google Imagen`,
+        description: `Creating ${batchSize} image${batchSize > 1 ? 's' : ''} with Hugging Face AI`,
       });
       
-      const imageUrls = await generateWithGoogleImagen(options, batchSize);
+      const imageUrls = await generateWithHuggingFace(options, batchSize);
       
       if (!imageUrls || imageUrls.length === 0) {
         throw new Error("Failed to generate any images. Please try again with a different prompt or settings.");
@@ -229,7 +221,7 @@ export const useImageGeneration = () => {
       
       toast({
         title: "Images created successfully",
-        description: `Created ${imageUrls.length} unique image${imageUrls.length > 1 ? 's' : ''} using Google Imagen`,
+        description: `Created ${imageUrls.length} unique image${imageUrls.length > 1 ? 's' : ''} using Hugging Face AI`,
         variant: "default",
       });
       
