@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface GenerationOptions {
   prompt: string;
@@ -24,6 +24,7 @@ export const useImageGeneration = () => {
     console.log('=== HUGGING FACE GENERATION START ===');
     console.log('Options:', options);
     console.log('API Key Status:', HUGGING_FACE_API_KEY ? 'Present' : 'Missing');
+    console.log('API Key (first 10 chars):', HUGGING_FACE_API_KEY.substring(0, 10));
     
     // Enhanced prompt with comprehensive style integration
     let enhancedPrompt = options.prompt.trim();
@@ -37,24 +38,17 @@ export const useImageGeneration = () => {
         'anime': 'high quality anime art style, cel-shaded animation, manga inspired illustration',
         'cartoon': 'vibrant cartoon illustration style, bold colors, stylized characters',
         'collage': 'artistic mixed media collage, layered composition, creative assembly',
-        'cookie': 'cute cookie dough texture style, sweet confectionery aesthetic',
+        'cinematic': 'cinematic movie style, dramatic lighting, professional cinematography',
         'crayon': 'hand-drawn crayon art style, waxy texture, childlike artistic expression',
         'doodle': 'casual hand-drawn doodle style, sketch-like lines, informal drawing',
-        'dough': 'clay sculpture style, malleable texture, handcrafted pottery look',
         'felt': 'soft felt fabric texture, textile art style, crafted appearance',
         'illustrated': 'professional digital illustration, polished artwork, detailed rendering',
         'marker': 'bold marker pen drawing style, vibrant strokes, graphic design',
-        'mechanical': 'technical blueprint style, precise engineering lines, technical drawing',
         'painting': 'traditional oil painting style, visible brushstrokes, artistic masterpiece',
-        'paper': 'paper craft origami style, folded paper art, geometric shapes',
-        'pin': 'vintage pin-up art style, retro poster design, classic glamour',
-        'plushie': 'soft toy plushie appearance, cuddly fabric texture, cute stuffed animal',
         'realistic': 'ultra-photorealistic style, lifelike details, professional photography',
         'tattoo': 'bold tattoo art style, ink design, traditional body art',
-        'woodblock': 'traditional woodblock print style, carved texture, printmaking art',
         
         // Moods
-        'sweets': 'candy-colored sweet aesthetic, pastel tones, confectionery theme',
         'classical': 'elegant classical art style, timeless beauty, refined composition',
         'cyberpunk': 'futuristic cyberpunk aesthetic, neon lights, high-tech atmosphere',
         'dreamy': 'soft dreamy atmosphere, ethereal quality, fantasy-like mood',
@@ -65,7 +59,6 @@ export const useImageGeneration = () => {
         'trippy': 'psychedelic surreal patterns, mind-bending visuals, abstract geometry',
         'tropical': 'vibrant tropical paradise, exotic nature, warm atmosphere',
         'steampunk': 'vintage steampunk design, brass machinery, Victorian technology',
-        'wasteland': 'post-apocalyptic wasteland, desolate landscape, survival atmosphere',
         
         // Lighting
         'bright': 'bright daylight illumination, well-lit scene, clear visibility',
@@ -78,18 +71,16 @@ export const useImageGeneration = () => {
         // Colors
         'cool': 'cool color palette, blues and greens, calming tones',
         'earthy': 'natural earthy colors, browns and greens, organic palette',
-        'indigo': 'deep indigo blue tones, night sky colors, rich blue palette',
-        'infrared': 'infrared thermal imaging style, heat signature colors, false color',
         'pastel': 'soft pastel color scheme, gentle hues, light color palette',
         'warm': 'warm color palette, reds and oranges, cozy atmosphere'
       };
       
       const styleDescription = styleMappings[options.stylePreset] || `${options.stylePreset} style`;
-      enhancedPrompt = `${enhancedPrompt}, ${styleDescription}, high quality, professional, detailed artwork`;
+      enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
     }
 
-    // Add quality and detail enhancers
-    enhancedPrompt += ', masterpiece, best quality, ultra detailed, sharp focus, professional lighting';
+    // Add quality enhancers
+    enhancedPrompt += ', masterpiece, best quality, ultra detailed, sharp focus, professional lighting, 8k resolution';
 
     console.log('Final enhanced prompt:', enhancedPrompt);
 
@@ -147,10 +138,10 @@ export const useImageGeneration = () => {
           inputs: enhancedPrompt,
           parameters: {
             guidance_scale: options.guidanceScale,
-            num_inference_steps: Math.min(options.steps, 50), // Limit steps for faster generation
+            num_inference_steps: Math.min(options.steps, 50),
             width: width,
             height: height,
-            negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, watermark, signature, text, logo, cut off, low res, pixelated, grainy, artifacts, noise, oversaturated, undersaturated"
+            negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, watermark, signature, text, logo"
           }
         };
 
@@ -158,6 +149,19 @@ export const useImageGeneration = () => {
 
         const apiUrl = `https://api-inference.huggingface.co/models/${huggingFaceModel}`;
         console.log('API URL:', apiUrl);
+
+        // Test API key first
+        console.log('Testing API key...');
+        const testResponse = await fetch('https://api-inference.huggingface.co/api/whoami', {
+          headers: {
+            "Authorization": `Bearer ${HUGGING_FACE_API_KEY}`,
+          }
+        });
+
+        console.log('API key test response status:', testResponse.status);
+        if (testResponse.status === 401) {
+          throw new Error("API key authentication failed. Please check your Hugging Face API key permissions.");
+        }
 
         const response = await fetch(apiUrl, {
           method: "POST",
@@ -177,17 +181,22 @@ export const useImageGeneration = () => {
           console.error("Hugging Face API error - Status:", response.status);
           console.error("Hugging Face API error - Response:", errorText);
           
+          let errorMessage = "";
           if (response.status === 401) {
-            throw new Error("API key authentication failed. Please verify your Hugging Face API key has the required permissions.");
+            errorMessage = "API key authentication failed. Please verify your Hugging Face API key has the required permissions.";
           } else if (response.status === 400) {
-            throw new Error("Invalid request parameters. Please try different settings or a simpler prompt.");
+            errorMessage = "Invalid request parameters. Please try different settings or a simpler prompt.";
           } else if (response.status === 503) {
-            throw new Error("Model is currently loading. Please wait a moment and try again.");
+            errorMessage = "Model is currently loading. Please wait a moment and try again.";
           } else if (response.status === 429) {
-            throw new Error("Rate limit exceeded. Please wait before generating more images.");
+            errorMessage = "Rate limit exceeded. Please wait before generating more images.";
+          } else if (response.status === 403) {
+            errorMessage = "Access forbidden. Your API key may not have permission to access this model.";
           } else {
-            throw new Error(`API Error (${response.status}): ${errorText || 'Unknown error occurred'}`);
+            errorMessage = `API Error (${response.status}): ${errorText || 'Unknown error occurred'}`;
           }
+          
+          throw new Error(errorMessage);
         }
 
         // Check content type
@@ -217,8 +226,8 @@ export const useImageGeneration = () => {
 
         // Add delay between requests to avoid rate limiting
         if (i < batchSize - 1) {
-          console.log('Waiting 3 seconds before next request...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('Waiting 2 seconds before next request...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       } catch (err) {
         console.error(`❌ Generation error for image ${i + 1}:`, err);
@@ -247,32 +256,32 @@ export const useImageGeneration = () => {
       });
       
       toast({
-        title: "Generating images",
-        description: `Creating ${batchSize} high-quality image${batchSize > 1 ? 's' : ''} with Hugging Face AI`,
+        title: "शुरू हो रहा है",
+        description: `${batchSize} high-quality image${batchSize > 1 ? 's' : ''} बना रहे हैं Hugging Face AI के साथ`,
       });
       
       const imageUrls = await generateWithHuggingFace(options, batchSize);
       
       if (!imageUrls || imageUrls.length === 0) {
-        throw new Error("Failed to generate any images. Please check your API key permissions and try again.");
+        throw new Error("कोई image generate नहीं हो सकी। कृपया अपनी API key permissions check करें।");
       }
       
       setGeneratedImages(imageUrls);
       
       toast({
-        title: "Images created successfully",
-        description: `Generated ${imageUrls.length} unique image${imageUrls.length > 1 ? 's' : ''} using Hugging Face AI`,
+        title: "सफलतापूर्वक बनाई गई",
+        description: `${imageUrls.length} unique image${imageUrls.length > 1 ? 's' : ''} successfully generate हुईं`,
         variant: "default",
       });
       
       return imageUrls;
     } catch (err: any) {
       console.error("❌ Image generation error:", err);
-      const errorMessage = err.message || 'Failed to generate image. Please try again.';
+      const errorMessage = err.message || 'Image generate करने में समस्या। कृपया फिर से कोशिश करें।';
       setError(errorMessage);
       
       toast({
-        title: "Image generation failed",
+        title: "Image generation में समस्या",
         description: errorMessage,
         variant: "destructive",
       });
